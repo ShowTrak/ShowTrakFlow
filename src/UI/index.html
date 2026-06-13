@@ -1,0 +1,1727 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <meta
+      http-equiv="X-Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    /> -->
+    <link rel="stylesheet" href="./vendors/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="./vendors/bootstrap-icons/font/bootstrap-icons.css" />
+    <link rel="stylesheet" type="text/css" href="./vendors/toastify/index.min.css" />
+    <link rel="stylesheet" href="./css/main.css" />
+
+    <title>ShowTrak Flow</title>
+  </head>
+  <body>
+    <div class="dragbar bg-light d-flex justify-content-center gap-3 align-items-center p-2">
+      <img class="no-drag" id="APPLICATION_NAVBAR_LOGO" src="./img/icon.png" alt="ShowTrak Logo" />
+      <span class="no-drag" id="APPLICATION_NAVBAR_TITLE">ShowTrak</span>
+      <span class="no-drag" id="APPLICATION_NAVBAR_STATUS"></span>
+      <span class="no-drag" id="APPLICATION_NAVBAR_FILE"></span>
+    </div>
+    <div id="APPLICATION_CONTAINER" class="h-100">
+      <div id="APPLICATION" class="container-fluid text-center text-light p-0 d-grid">
+        <div id="APPLICATION_CONTENT" class="pb-3"></div>
+      </div>
+    </div>
+    <!-- Bottom Bar -->
+    <div id="APP_BOTTOM_BAR">
+      <div class="bar-content">
+        <div class="bar-section left">
+          <div class="mode-group btn-group btn-group-sm" role="group" aria-label="Mode Switch">
+            <button type="button" id="MODE_BTN_SHOW" class="btn btn-outline-light">SHOW</button>
+            <button type="button" id="MODE_BTN_EDIT" class="btn btn-outline-light">EDIT</button>
+          </div>
+          <button
+            type="button"
+            id="ALERT_ACTIONS_TOGGLE_BTN"
+            class="btn btn-sm alert-actions-toggle-btn"
+            title="Disable Alert Actions"
+            aria-label="Toggle Alert Actions"
+            aria-pressed="true"
+          >
+            ALERTS
+          </button>
+          <button
+            type="button"
+            id="COMPACT_MODE_BTN"
+            class="btn btn-outline-light btn-sm compact-mode-btn"
+            title="Toggle Compact Mode"
+            aria-label="Toggle Compact Mode"
+            aria-pressed="false"
+          >
+            <i id="COMPACT_MODE_ICON" class="bi bi-arrows-angle-contract"></i>
+          </button>
+        </div>
+        <div class="bar-section center">
+          <span id="SELECTION_STATUS" class="cursor-pointer"
+            >0 Clients Selected</span
+          >
+        </div>
+        <div class="bar-section right">
+          <button
+            id="ALERTS_BUTTON"
+            class="alerts-btn no-drag"
+            title="Toggle Alerts Panel (Ctrl/Cmd+Y)"
+            aria-label="Alerts"
+          >
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span class="alerts-count d-none">0</span>
+          </button>
+          <div class="dropdown no-drag" id="ADD_MONITORING_TARGET_DROPDOWN">
+            <button
+              type="button"
+              id="ADD_MONITORING_TARGET_BTN"
+              class="settings-btn dropdown-toggle no-drag"
+              title="Add Monitoring Target"
+              aria-label="Add Monitoring Target"
+              data-bs-toggle="dropdown"
+              data-bs-offset="0,6"
+              data-bs-auto-close="true"
+              aria-expanded="false"
+            >
+              <i class="bi bi-plus-circle-fill"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" id="ADD_MONITORING_TARGET_MENU">
+              <li>
+                <button
+                  type="button"
+                  class="dropdown-item"
+                  id="SHOWTRAK_MODEL_CORE_ALERT_MANAGER_BUTTON"
+                >
+                  Manage Alerts
+                </button>
+              </li>
+              <li>
+                <button type="button" class="dropdown-item" id="ADD_ALERT_ACTION">
+                  Create Alert
+                </button>
+              </li>
+            </ul>
+          </div>
+          <div class="dropdown no-drag" id="SETTINGS_MENU_DROPDOWN">
+            <button
+              type="button"
+              id="NAVBAR_CORE_BUTTON"
+              class="settings-btn dropdown-toggle no-drag"
+              title="Settings"
+              aria-label="Settings"
+              data-bs-toggle="dropdown"
+              data-bs-offset="0,6"
+              data-bs-auto-close="true"
+              aria-expanded="false"
+            >
+              <i class="bi bi-gear-fill"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" id="SETTINGS_MENU">
+              <li><h6 class="dropdown-header">Show File</h6></li>
+              <li>
+                <button type="button" class="dropdown-item" id="SHOWTRAK_MODEL_CORE_NEW">
+                  <span>New Show</span>
+                  <span class="menu-shortcut">Cmd/Ctrl+N</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="dropdown-item" id="SHOWTRAK_MODEL_CORE_OPEN">
+                  <span>Open</span>
+                  <span class="menu-shortcut">Cmd/Ctrl+O</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="dropdown-item" id="SHOWTRAK_MODEL_CORE_SAVE">
+                  <span>Save</span>
+                  <span class="menu-shortcut">Cmd/Ctrl+S</span>
+                </button>
+              </li>
+              <li>
+                <button type="button" class="dropdown-item" id="SHOWTRAK_MODEL_CORE_SAVEAS">
+                  <span>Save As</span>
+                  <span class="menu-shortcut">Cmd/Ctrl+Shift+S</span>
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li><h6 class="dropdown-header">Folders</h6></li>
+              <li>
+                <button type="button" class="dropdown-item" id="SHOWTRAK_MODEL_CORE_LOGSFOLDER">
+                  Open Logs Directory
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li><h6 class="dropdown-header">Manage</h6></li>
+              <li>
+                <button
+                  type="button"
+                  class="dropdown-item"
+                  id="SHOWTRAK_MODEL_CORE_OSC_ROUTE_LIST_BUTTON"
+                >
+                  OSC/API Reference
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="dropdown-item"
+                  id="SHOWTRAK_MODEL_CORE_OSC_HTTP_DEBUG_BUTTON"
+                >
+                  OSC/API Debug Terminal
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li><h6 class="dropdown-header">Help &amp; Support</h6></li>
+              <li>
+                <button type="button" class="dropdown-item" id="SHOWTRAK_MODEL_CORE_CHECKUPDATES">
+                  Check for Updates
+                </button>
+              </li>
+              <li>
+                <button type="button" class="dropdown-item" id="SHOWTRAK_ABOUT_BUTTON">
+                  About
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <button type="button" class="dropdown-item" id="SHOWTRAK_MODEL_CORE_OPEN_SETTINGS">
+                  <span>ShowTrak Preferences</span>
+                  <span class="menu-shortcut">Cmd/Ctrl+,</span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  class="dropdown-item text-danger"
+                  id="SHOWTRAK_MODEL_CORE_SHUTDOWN_BUTTON"
+                >
+                  Close ShowTrak
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Bottom Bar -->
+
+    <!-- Alerts Tray -->
+    <div id="ALERTS_TRAY" class="alerts-tray no-drag" aria-live="polite" aria-label="Alerts" hidden>
+      <div class="alerts-header">
+        <strong>Alerts</strong>
+        <div class="alerts-actions">
+          <button type="button" class="btn btn-sm btn-light" id="ALERTS_DISMISS_ALL">
+            Dismiss All (Ctrl+U)
+          </button>
+        </div>
+      </div>
+      <div id="ALERTS_LIST" class="alerts-list"></div>
+    </div>
+    <!-- End Alerts Tray -->
+    <!-- Context Menu -->
+    <div id="SHOWTRAK_CONTEXT_MENU"></div>
+    <!-- End Context Menu -->
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_SHORTCUTS"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_SHORTCUTS_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <strong class="mb-0"> Keyboard Shortcuts </strong>
+
+            <div id="KEYBOARD_SHORTCUTS_LIST" class="d-grid gap-2 text-start mt-2"></div>
+
+            <div class="row g-2 mt-2">
+              <div class="col-12 d-grid">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Keyboard Shortcuts Modal -->
+
+    <!-- No Show Open Prompt Modal -->
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_NO_SHOW"
+      tabindex="-1"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      aria-labelledby="SHOWTRAK_MODAL_NO_SHOW_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <strong class="mb-0"> No Show Open </strong>
+            <p class="text-muted text-sm mb-2">
+              Open an existing ShowTrak file or create a new show to get started.
+            </p>
+
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-success" id="NO_SHOW_OPEN">Open Show</button>
+              <button type="button" class="btn btn-light" id="NO_SHOW_NEW">New Show</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End No Show Open Prompt Modal -->
+
+    <!-- Legacy Data Migration Prompt Modal -->
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_MIGRATE"
+      tabindex="-1"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      aria-labelledby="SHOWTRAK_MODAL_MIGRATE_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <strong class="mb-0"> Save Your Existing Data </strong>
+            <p class="text-muted text-sm mb-2">
+              ShowTrak now stores configuration and show data in a .showtrak file. We found data
+              from a previous version that is not yet saved to a file. Choose a location to save it
+              now to avoid losing your data.
+            </p>
+
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-success" id="MIGRATE_SAVE">
+                Save Show File
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End Legacy Data Migration Prompt Modal -->
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_ABOUT"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_ABOUT_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content SHOWTRAK_ABOUT_MODAL_CONTENT">
+          <div class="modal-body text-center SHOWTRAK_ABOUT_MODAL_BODY">
+            <div class="d-flex justify-content-center">
+              <img class="SHOWTRAK_MODEL_CORE_LOGO" src="./img/icon.png" alt="ShowTrak Logo" />
+            </div>
+
+            <strong class="mb-0 SHOWTRAK_ABOUT_TITLE"> About ShowTrak </strong>
+            <div id="SHOWTRAK_ABOUT_VERSION" class="SHOWTRAK_ABOUT_VERSION mb-2"></div>
+
+            <div class="card bg-ghost-light border-0 rounded SHOWTRAK_ABOUT_CARD">
+              <div class="card-body p-3">
+                ShowTrak is an open-source project founded by
+                <span class="text-info">Tom Kirkman-Wood</span> &amp;
+                <span class="text-info">Ben Sugrue</span> in 2019.
+              </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-2">
+              <a class="btn btn-light SHOWTRAK_ABOUT_WEBSITE_BTN" id="SHOWTRAK_ABOUT_WEBSITE">
+                Visit ShowTrak Website
+              </a>
+              <a class="btn btn-light SHOWTRAK_ABOUT_WEBSITE_BTN" id="SHOWTRAK_ABOUT_GITHUB">
+                View on GitHub
+              </a>
+              <button
+                type="button"
+                class="btn btn-light SHOWTRAK_ABOUT_WEBSITE_BTN"
+                id="SHOWTRAK_MODEL_CORE_SUPPORTDISCORD"
+              >
+                Open Support Discord
+              </button>
+            </div>
+
+            <div class="card border-0 rounded mt-2 SHOWTRAK_ABOUT_CARD">
+              <div class="card-body p-3 text-start SHOWTRAK_ABOUT_UPDATE_BODY">
+                <strong>Open Source and Contributions</strong>
+                <div class="text-muted mt-2">
+                  Open source projects are built and improved by people sharing code, feedback, bug
+                  reports, documentation, and time. If ShowTrak helps your setup, you can contribute
+                  by reporting issues, proposing improvements, opening pull requests, or helping
+                  other users in the community.
+                </div>
+                <div class="text-muted mt-2">
+                  Huge thanks to the maintainers and contributors of the open source packages listed
+                  below. Their work makes ShowTrak possible.
+                </div>
+              </div>
+            </div>
+
+            <div
+              id="UPDATE_SECTION"
+              class="card bg-ghost-light border-0 rounded d-none mt-2 SHOWTRAK_ABOUT_CARD"
+            >
+              <div class="card-body p-3 text-start SHOWTRAK_ABOUT_UPDATE_BODY">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <strong>Update</strong>
+                    <div id="UPDATE_STATUS" class="text-muted">No pending update</div>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-success d-none"
+                      id="UPDATE_INSTALL_BTN"
+                    >
+                      Install
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light d-none" id="UPDATE_LATER_BTN">
+                      Later
+                    </button>
+                  </div>
+                </div>
+                <div id="UPDATE_NOTES_WRAPPER" class="mt-2 d-none">
+                  <div class="fw-semibold small mb-1">Changelog</div>
+                  <div
+                    id="UPDATE_CHANGELOG"
+                    class="rounded bg-ghost-light p-2 small"
+                    style="max-height: 180px; overflow: auto; white-space: pre-wrap"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card border-0 rounded mt-2 SHOWTRAK_ABOUT_CARD">
+              <div class="card-body p-3 text-start SHOWTRAK_ABOUT_UPDATE_BODY">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <strong>Dependencies</strong>
+                  <span id="SHOWTRAK_ABOUT_DEPENDENCY_COUNT" class="text-muted small"></span>
+                </div>
+                <div
+                  id="SHOWTRAK_ABOUT_DEPENDENCIES"
+                  class="SHOWTRAK_ABOUT_DEPENDENCIES_LIST text-muted"
+                >
+                  Loading dependencies...
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-2">
+              <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_GROUPMANAGER"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_GROUPMANAGER_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <strong class="mb-0"> Group Manager </strong>
+
+            <div id="GROUP_MANAGER_GROUP_LIST" class="d-grid gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_GROUP_EDITOR"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_GROUP_EDITOR_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-start">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <button
+                type="button"
+                id="GROUP_MANAGER_EDITOR_BACK"
+                class="btn btn-sm btn-ghost-light text-light border-0 ps-0"
+              >
+                <i class="bi bi-chevron-left"></i> Back to list
+              </button>
+              <button
+                type="button"
+                id="GROUP_MANAGER_EDITOR_DELETE"
+                class="btn btn-sm script-manager-delete-btn"
+                title="Delete group"
+              >
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+
+            <div class="d-grid gap-2">
+              <div class="form-floating bg-ghost rounded">
+                <input
+                  type="text"
+                  id="GROUP_MANAGER_EDITOR_NAME"
+                  class="form-control bg-transparent text-light border-0"
+                  placeholder="Group Name"
+                  autocomplete="off"
+                />
+                <label for="GROUP_MANAGER_EDITOR_NAME">Group Name</label>
+              </div>
+
+              <div class="form-floating bg-ghost rounded has-copy group-manager-editor-id-field">
+                <input
+                  type="text"
+                  id="GROUP_MANAGER_EDITOR_GROUPID"
+                  class="form-control bg-transparent text-light border-0"
+                  placeholder="Group ID"
+                  readonly
+                />
+                <label for="GROUP_MANAGER_EDITOR_GROUPID">Group ID</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#GROUP_MANAGER_EDITOR_GROUPID"
+                  title="Copy Group ID"
+                  aria-label="Copy Group ID"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+
+              <div class="bg-ghost p-2 rounded d-grid gap-2">
+                <div class="group-manager-client-header d-flex align-items-center">
+                  <span class="group-manager-client-col group-manager-client-col-name">Name</span>
+                  <span class="group-manager-client-col group-manager-client-col-hostname">Hostname</span>
+                  <span class="group-manager-client-col group-manager-client-col-ip">IP</span>
+                  <span class="group-manager-client-col group-manager-client-col-action"></span>
+                </div>
+                <div id="GROUP_MANAGER_EDITOR_CLIENT_LIST" class="group-manager-member-list d-grid gap-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_UPDATE_MANAGER"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_UPDATE_MANAGER_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-start">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong class="mb-0">Update Manager</strong>
+              <button type="button" class="btn btn-sm btn-light" id="UPDATE_MANAGER_REFRESH">
+                Refresh
+              </button>
+            </div>
+            <p id="UPDATE_MANAGER_RELEASE" class="text-light mb-1">Release: loading...</p>
+            <p id="UPDATE_MANAGER_STATUS" class="text-muted mb-2">
+              Download latest release from the server and push updates over LAN.
+            </p>
+
+            <div class="mb-2">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <label class="form-label text-sm mb-0" for="UPDATE_MANAGER_RELEASE_SELECT">
+                  Release
+                </label>
+                <span id="UPDATE_MANAGER_RELEASE_BADGE" class="badge UPDATE_MANAGER_RELEASE_BADGE">
+                  Not downloaded
+                </span>
+              </div>
+              <select class="form-select" id="UPDATE_MANAGER_RELEASE_SELECT"></select>
+            </div>
+
+            <div id="UPDATE_MANAGER_DOWNLOAD_PROGRESS_WRAPPER" class="d-none mb-2">
+              <div class="small text-muted mb-1" id="UPDATE_MANAGER_DOWNLOAD_PROGRESS_TEXT">
+                Preparing download...
+              </div>
+              <div class="progress UPDATE_MANAGER_DOWNLOAD_PROGRESS">
+                <div
+                  id="UPDATE_MANAGER_DOWNLOAD_PROGRESS_BAR"
+                  class="progress-bar bg-info"
+                  role="progressbar"
+                  style="width: 0%"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  aria-valuenow="0"
+                ></div>
+              </div>
+            </div>
+
+            <div class="d-grid gap-2" id="UPDATE_MANAGER_CLIENT_LIST"></div>
+
+            <div class="d-grid gap-2 mt-2">
+              <button type="button" class="btn btn-info" id="UPDATE_MANAGER_DOWNLOAD_LATEST">
+                Download Selected Release
+              </button>
+              <button type="button" class="btn btn-success" id="UPDATE_MANAGER_DEPLOY_ALL">
+                Deploy Release To Selected Clients
+              </button>
+              <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="OSC_ROUTE_LIST_MODAL"
+      tabindex="-1"
+      aria-labelledby="OSC_ROUTE_LIST_MODAL_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <strong id="OSC_ROUTE_LIST_MODAL_Label" class="mb-0">OSC/API Reference</strong>
+            <div id="OSC_ROUTE_LIST" class="d-grid gap-2 text-start"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="OSC_HTTP_DEBUG_MODAL"
+      tabindex="-1"
+      aria-labelledby="OSC_HTTP_DEBUG_MODAL_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content osc-http-debug-modal-content">
+          <div class="modal-body osc-http-debug-modal-body">
+            <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+              <div>
+                <strong id="OSC_HTTP_DEBUG_MODAL_Label" class="mb-0">OSC/API Debug Terminal</strong>
+              </div>
+              <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+            <div id="OSC_HTTP_DEBUG_TERMINAL" class="osc-http-debug-terminal" role="log" aria-live="polite">
+              <div class="osc-http-debug-empty">Send OSC or HTTP traffic to inspect requests.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_SCRIPTMANAGER"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_SCRIPTMANAGER_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-start">
+            <!-- List view -->
+            <div id="SCRIPT_MANAGER_LIST_VIEW">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong class="mb-2">Script Manager</strong>
+                <div class="d-flex gap-2">
+                  <button
+                    type="button"
+                    id="SCRIPT_MANAGER_CREATE_TEMPLATE"
+                    class="btn btn-sm script-manager-template-btn"
+                    title="Browse the ShowTrak sample scripts and use one as a template"
+                  >
+                    <i class="bi bi-collection"></i> New from template
+                  </button>
+                  <button
+                    type="button"
+                    id="SCRIPT_MANAGER_CREATE"
+                    class="btn btn-sm script-manager-create-btn"
+                    title="Create a new blank script"
+                  >
+                    <i class="bi bi-plus-lg"></i>
+                  </button>
+                </div>
+              </div>
+              <div id="SCRIPT_MANAGER_LIST" class="d-grid gap-2"></div>
+            </div>
+
+            <!-- Templates (sample scripts) view -->
+            <div id="SCRIPT_MANAGER_TEMPLATES_VIEW" class="d-none">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <button
+                  type="button"
+                  id="SCRIPT_MANAGER_TEMPLATES_BACK"
+                  class="btn btn-sm btn-ghost-light text-light border-0 ps-0"
+                >
+                  <i class="bi bi-chevron-left"></i> Back to list
+                </button>
+                <button
+                  type="button"
+                  id="SCRIPT_MANAGER_TEMPLATES_REFRESH"
+                  class="btn btn-sm script-manager-folder-btn"
+                  title="Check for updated sample scripts"
+                >
+                  <i class="bi bi-arrow-clockwise"></i>
+                </button>
+              </div>
+              <strong class="d-block mb-1">Create From Template</strong>
+              <span class="text-sm text-muted d-block mb-2"
+                >Pick an approved ShowTrak sample script to use as a starting point.</span
+              >
+              <div id="SCRIPT_MANAGER_TEMPLATES_LIST" class="d-grid gap-2"></div>
+            </div>
+
+            <!-- Editor view -->
+            <div id="SCRIPT_MANAGER_EDITOR_VIEW" class="d-none">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <button
+                  type="button"
+                  id="SCRIPT_MANAGER_BACK"
+                  class="btn btn-sm btn-ghost-light text-light border-0 ps-0"
+                >
+                  <i class="bi bi-chevron-left"></i> Back to list
+                </button>
+                <div class="d-flex gap-2">
+                  <button
+                    type="button"
+                    id="SCRIPT_MANAGER_OPEN_FOLDER"
+                    class="btn btn-sm script-manager-folder-btn"
+                    title="Open script folder"
+                  >
+                    <i class="bi bi-folder2-open"></i>
+                  </button>
+                  <button
+                    type="button"
+                    id="SCRIPT_MANAGER_DELETE"
+                    class="btn btn-sm script-manager-delete-btn"
+                    title="Delete script"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div id="SCRIPT_MANAGER_ISSUES" class="script-manager-issues d-none mb-2"></div>
+
+              <div class="d-grid gap-2">
+                <div class="form-floating bg-ghost rounded">
+                  <input
+                    type="text"
+                    id="SCRIPT_MANAGER_FIELD_ID"
+                    class="form-control bg-transparent text-light border-0"
+                    placeholder="ID"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                  <label for="SCRIPT_MANAGER_FIELD_ID">ID</label>
+                </div>
+
+                <div class="form-floating bg-ghost rounded">
+                  <input
+                    type="text"
+                    id="SCRIPT_MANAGER_FIELD_NAME"
+                    class="form-control bg-transparent text-light border-0"
+                    placeholder="Name"
+                    autocomplete="off"
+                  />
+                  <label for="SCRIPT_MANAGER_FIELD_NAME">Name</label>
+                </div>
+
+                <div class="form-floating bg-ghost rounded script-manager-textarea-float">
+                  <textarea
+                    id="SCRIPT_MANAGER_FIELD_DESCRIPTION"
+                    class="form-control bg-transparent text-light border-0"
+                    placeholder="Description"
+                    rows="3"
+                  ></textarea>
+                  <label for="SCRIPT_MANAGER_FIELD_DESCRIPTION">Description</label>
+                </div>
+
+                <div class="bg-ghost p-2 rounded d-grid gap-2">
+                  <span class="text-sm">Colour</span>
+                  <div id="SCRIPT_MANAGER_COLOUR_SWATCHES" class="d-flex gap-2 flex-wrap"></div>
+                </div>
+
+                <div
+                  class="bg-ghost p-2 rounded d-flex justify-content-between align-items-center"
+                >
+                  <div class="d-grid">
+                    <span>Confirmation</span>
+                    <span class="text-sm text-muted mb-0"
+                      >Ask before running this script.</span
+                    >
+                  </div>
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      style="margin-top: 0.6em !important"
+                      type="checkbox"
+                      id="SCRIPT_MANAGER_FIELD_CONFIRM"
+                    />
+                  </div>
+                </div>
+
+                <div
+                  class="bg-ghost p-2 rounded d-flex justify-content-between align-items-center"
+                >
+                  <div class="d-grid">
+                    <span>Enabled</span>
+                    <span class="text-sm text-muted mb-0"
+                      >Make this script available to run.</span
+                    >
+                  </div>
+                  <div class="form-check form-switch">
+                    <input
+                      class="form-check-input"
+                      style="margin-top: 0.6em !important"
+                      type="checkbox"
+                      id="SCRIPT_MANAGER_FIELD_ENABLED"
+                    />
+                  </div>
+                </div>
+
+                <div class="bg-ghost p-2 rounded d-grid gap-1">
+                  <label for="SCRIPT_MANAGER_FIELD_TIMEOUT_SECONDS" class="text-sm mb-0"
+                    >Timeout (seconds)</label
+                  >
+                  <input
+                    type="number"
+                    id="SCRIPT_MANAGER_FIELD_TIMEOUT_SECONDS"
+                    class="form-control form-control-sm bg-ghost-light text-light border-0"
+                    min="5"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="15"
+                  />
+                  <span class="text-sm text-muted mb-0"
+                    >Execution timeout per script. Stored in Script.json as milliseconds.</span
+                  >
+                </div>
+
+                <div class="bg-ghost p-2 rounded d-grid gap-2">
+                  <span class="text-sm">Platforms</span>
+                  <span class="text-sm text-muted mb-0"
+                    >Choose the file and optional arguments for each operating system.</span
+                  >
+                  <div class="d-grid gap-2" id="SCRIPT_MANAGER_PLATFORMS"></div>
+                </div>
+
+                <div class="bg-ghost p-2 rounded d-grid gap-2">
+                  <span class="text-sm">Files in this script</span>
+                  <div id="SCRIPT_MANAGER_FILE_LIST" class="d-grid gap-1"></div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-end gap-2 mt-2">
+                <button type="button" id="SCRIPT_MANAGER_REVERT" class="btn btn-sm btn-outline-light">
+                  <i class="bi bi-arrow-clockwise"></i> Revert
+                </button>
+                <button type="button" id="SCRIPT_MANAGER_SAVE" class="btn btn-sm btn-success">
+                  <i class="bi bi-save"></i> Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_SETTINGS"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_SETTINGS_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div id="SETTINGS" class="d-grid gap-2"></div>
+            <div id="REMOTE_ACCESS_SECTION" class="d-grid gap-2 mt-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODEL_EXECUTIONQUEUE"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODEL_EXECUTIONQUEUE_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <h6 class="mb-0">Executing Scripts</h6>
+
+            <div id="SHOWTRAK_EXECUTIONQUEUE" class="d-grid gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_CLIENT_EDITOR"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_CLIENT_EDIT_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div class="rounded-3 p-2 bg-ghost-light">
+              <h6 class="mb-0">Client Settings</h6>
+            </div>
+
+            <div class="d-grid gap-2">
+              <div class="form-floating">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="CLIENT_EDITOR_NICKNAME"
+                  placeholder="Nickname"
+                />
+                <label for="CLIENT_EDITOR_NICKNAME">Nickname</label>
+              </div>
+              <div class="form-floating has-copy">
+                <input
+                  type="text"
+                  class="form-control disabled"
+                  id="CLIENT_EDITOR_HOSTNAME"
+                  disabled
+                />
+                <label for="CLIENT_EDITOR_HOSTNAME">Hostname</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_EDITOR_HOSTNAME"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating">
+                <select class="form-select" id="CLIENT_EDITOR_GROUPID">
+                  <option value="0" selected>No Group</option>
+                  <option value="1">Viewer</option>
+                </select>
+                <label for="CLIENT_EDITOR_GROUPID">Group</label>
+              </div>
+              <div class="form-floating has-copy">
+                <input type="text" class="form-control disabled" id="CLIENT_EDITOR_IP" disabled />
+                <label for="CLIENT_EDITOR_IP">IP</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_EDITOR_IP"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating has-copy d-none" id="CLIENT_EDITOR_MAC_WRAPPER">
+                <input type="text" class="form-control disabled" id="CLIENT_EDITOR_MAC" disabled />
+                <label for="CLIENT_EDITOR_MAC">MAC Address</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_EDITOR_MAC"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating has-copy">
+                <input type="text" class="form-control disabled" id="CLIENT_EDITOR_UUID" disabled />
+                <label for="CLIENT_EDITOR_UUID">Client ID</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_EDITOR_UUID"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating has-copy">
+                <input
+                  type="text"
+                  class="form-control disabled"
+                  id="CLIENT_EDITOR_VERSION"
+                  disabled
+                />
+                <label for="CLIENT_EDITOR_VERSION">Client Version</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_EDITOR_VERSION"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="row g-2">
+              <div class="col-6 d-grid">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+              </div>
+              <div class="col-6 d-grid">
+                <button type="button" class="btn btn-success" id="SHOWTRAK_CLIENT_EDITOR_SAVE">
+                  Save
+                </button>
+              </div>
+            </div>
+
+            <div class="rounded-3 p-2 bg-ghost-light text-danger">
+              <h6 class="mb-0">Danger Zone</h6>
+            </div>
+            <button
+              type="button"
+              class="btn btn-ghost text-warning"
+              id="SHOWTRAK_CLIENT_EDITOR_UPDATE"
+            >
+              Check For Updates
+            </button>
+            <button
+              type="button"
+              class="btn btn-ghost text-danger"
+              id="SHOWTRAK_CLIENT_EDITOR_REMOVE"
+            >
+              Delete Client
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAL_MODAL_GROUPCREATION"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAL_MODAL_GROUPCREATION_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <h6 class="mb-0">Create New Group</h6>
+
+            <div class="form-floating">
+              <input
+                type="text"
+                class="form-control"
+                id="GROUP_CREATION_TITLE"
+                placeholder="Group Title"
+              />
+              <label for="GROUP_CREATION_TITLE">Group Title</label>
+            </div>
+
+            <div class="d-grid">
+              <button type="button" class="btn btn-success" id="GROUP_CREATION_SUBMIT">
+                Create Group
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_MONITORING_TARGET"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_MONITORING_TARGET_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div class="rounded-3 p-2 bg-ghost-light">
+              <h6 class="mb-0" id="MONITORING_TARGET_MODAL_TITLE">Add Monitoring Target</h6>
+            </div>
+
+            <div class="d-grid gap-2 text-start">
+              <div class="form-floating">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="MONITORING_TARGET_NICKNAME"
+                  placeholder="Name"
+                />
+                <label for="MONITORING_TARGET_NICKNAME">Name</label>
+              </div>
+              <div class="form-floating">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="MONITORING_TARGET_ADDRESS"
+                  placeholder="IP / Hostname / Domain"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <label for="MONITORING_TARGET_ADDRESS">IP / Hostname / Domain</label>
+              </div>
+              <div class="form-floating">
+                <select class="form-select" id="MONITORING_TARGET_METHOD"></select>
+                <label for="MONITORING_TARGET_METHOD">Monitoring Method</label>
+              </div>
+
+              <div class="bg-ghost rounded px-3 py-2">
+                <label
+                  for="MONITORING_TARGET_INTERVAL"
+                  class="form-label mb-1 d-flex justify-content-between align-items-center w-100"
+                >
+                  <span>Check Interval</span>
+                  <span
+                    id="MONITORING_TARGET_INTERVAL_LABEL"
+                    class="badge bg-ghost-light text-light"
+                    >30s</span
+                  >
+                </label>
+                <input
+                  type="range"
+                  class="form-range"
+                  id="MONITORING_TARGET_INTERVAL"
+                  min="3000"
+                  max="300000"
+                  step="1000"
+                  value="30000"
+                />
+              </div>
+
+
+
+              <div class="form-floating">
+                <input
+                  type="number"
+                  class="form-control"
+                  id="MONITORING_TARGET_DEGRADED_THRESHOLD"
+                  min="0"
+                  max="600000"
+                  step="50"
+                  value="0"
+                  placeholder="Degraded Threshold (ms)"
+                />
+                <label for="MONITORING_TARGET_DEGRADED_THRESHOLD"
+                  >Degraded Threshold (ms, 0 = off)</label
+                >
+              </div>
+
+              <div id="MONITORING_TARGET_DYNAMIC_SETTINGS" class="d-grid gap-2"></div>
+            </div>
+
+            <div class="row g-2 mt-2">
+              <div class="col-6 d-grid">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+              </div>
+              <div class="col-6 d-grid">
+                <button type="button" class="btn btn-success" id="MONITORING_TARGET_SAVE">
+                  Save
+                </button>
+              </div>
+            </div>
+
+            <div id="MONITORING_TARGET_DANGER_ZONE" class="d-none">
+              <div class="rounded-3 p-2 bg-ghost-light text-danger mt-2">
+                <h6 class="mb-0">Danger Zone</h6>
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost text-danger w-100 mt-2"
+                id="MONITORING_TARGET_DELETE"
+              >
+                Delete Monitoring Target
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_DUMMY_CLIENT"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_DUMMY_CLIENT_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div class="rounded-3 p-2 bg-ghost-light">
+              <h6 class="mb-0" id="DUMMY_CLIENT_MODAL_TITLE">Add Dummy Client</h6>
+            </div>
+
+            <div class="d-grid gap-2 text-start">
+              <div class="form-floating">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="DUMMY_CLIENT_TITLE"
+                  placeholder="Title"
+                />
+                <label for="DUMMY_CLIENT_TITLE">Title</label>
+              </div>
+              <div class="form-floating">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="DUMMY_CLIENT_ID"
+                  placeholder="ID"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <label for="DUMMY_CLIENT_ID">ID (alphanumeric, no spaces)</label>
+              </div>
+              <div class="form-floating">
+                <select class="form-select" id="DUMMY_CLIENT_GROUPID">
+                  <option value="null" selected>No Group</option>
+                </select>
+                <label for="DUMMY_CLIENT_GROUPID">Group</label>
+              </div>
+
+              <div class="bg-ghost rounded px-3 py-2">
+                <label
+                  for="DUMMY_CLIENT_INTERVAL"
+                  class="form-label mb-1 d-flex justify-content-between align-items-center w-100"
+                >
+                  <span>Heartbeat Interval</span>
+                  <span id="DUMMY_CLIENT_INTERVAL_LABEL" class="badge bg-ghost-light text-light"
+                    >30s</span
+                  >
+                </label>
+                <input
+                  type="range"
+                  class="form-range"
+                  id="DUMMY_CLIENT_INTERVAL"
+                  min="5000"
+                  max="300000"
+                  step="1000"
+                  value="30000"
+                />
+              </div>
+            </div>
+
+            <div class="row g-2 mt-2">
+              <div class="col-6 d-grid">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+              </div>
+              <div class="col-6 d-grid">
+                <button type="button" class="btn btn-success" id="DUMMY_CLIENT_SAVE">Save</button>
+              </div>
+            </div>
+
+            <div id="DUMMY_CLIENT_DANGER_ZONE" class="d-none">
+              <div class="rounded-3 p-2 bg-ghost-light text-danger mt-2">
+                <h6 class="mb-0">Danger Zone</h6>
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost text-danger w-100 mt-2"
+                id="DUMMY_CLIENT_DELETE"
+              >
+                Delete Dummy Client
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MONITOR_HISTORY_MODAL"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MONITOR_HISTORY_MODAL_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div class="rounded-3 p-2 bg-ghost-light mb-2">
+              <h6 class="mb-0" id="MONITOR_HISTORY_TITLE">Monitoring History</h6>
+            </div>
+
+            <div
+              id="MONITOR_HISTORY_RANGE_GROUP"
+              class="btn-group monitor-history-range w-100"
+              role="group"
+              aria-label="History range"
+            >
+              <button type="button" class="btn btn-outline-light" data-range="5m">5 Minutes</button>
+              <button type="button" class="btn btn-outline-light" data-range="15m">
+                15 Minutes
+              </button>
+              <button type="button" class="btn btn-outline-light" data-range="30m">
+                30 Minutes
+              </button>
+              <button type="button" class="btn btn-outline-light" data-range="1h">1 Hour</button>
+              <button type="button" class="btn btn-outline-light" data-range="12h">12 Hours</button>
+            </div>
+
+            <div id="MONITOR_HISTORY_GRAPH_PANEL" class="mt-2">
+              <canvas
+                id="MONITOR_HISTORY_CANVAS"
+                class="w-100"
+                height="175"
+                aria-label="Monitoring history graph"
+                role="img"
+              ></canvas>
+              <div
+                id="MONITOR_HISTORY_TOOLTIP"
+                class="d-none"
+                role="status"
+                aria-live="polite"
+              ></div>
+              <div id="MONITOR_HISTORY_EMPTY" class="d-none">No samples in this range yet.</div>
+            </div>
+
+            <div id="MONITOR_HISTORY_SUMMARY" class="monitor-history-summary mt-2"></div>
+
+            <div class="monitor-history-legend mt-2" aria-hidden="true">
+              <span><i class="status-dot status-dot-online"></i>Online</span>
+              <span><i class="status-dot status-dot-degraded"></i>Degraded</span>
+              <span><i class="status-dot status-dot-offline"></i>Offline</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_ALERT_MANAGER"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_ALERT_MANAGER_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div id="ALERT_MANAGER_LIST_PANEL" class="d-grid gap-2 text-start mt-1">
+              <div class="d-flex justify-content-between align-items-center">
+                <strong>Alerts</strong>
+                <button type="button" class="btn btn-sm btn-success" id="ALERT_RULE_CREATE_BUTTON">
+                  New Alert
+                </button>
+              </div>
+              <div id="ALERT_RULE_MANAGER_LIST" class="d-grid gap-2"></div>
+            </div>
+
+            <div id="ALERT_MANAGER_EDITOR_PANEL" class="d-none d-grid gap-2 text-start mt-1">
+              <div class="d-flex justify-content-between align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-light" id="ALERT_RULE_BACK_TO_LIST">
+                  <i class="bi bi-chevron-left me-1" aria-hidden="true"></i>Back
+                </button>
+                <div class="rounded-3 p-2 bg-ghost flex-grow-1 text-center">
+                  <h6 id="ALERT_RULE_EDITOR_TITLE" class="mb-0">Create Alert Rule</h6>
+                </div>
+              </div>
+
+              <div class="form-floating">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="ALERT_RULE_TITLE"
+                  placeholder="Rule Title"
+                />
+                <label for="ALERT_RULE_TITLE">Rule Title</label>
+              </div>
+
+              <div>
+                <div class="alert-multiselect" id="ALERT_SCOPE_DROPDOWN">
+                  <button
+                    type="button"
+                    class="btn btn-light w-100 text-start d-flex justify-content-between align-items-center"
+                    id="ALERT_SCOPE_TOGGLE"
+                  >
+                    <span>Select targets</span>
+                    <i class="bi bi-chevron-down ms-2" aria-hidden="true"></i>
+                  </button>
+                  <div class="alert-multiselect-menu d-none" id="ALERT_SCOPE_MENU"></div>
+                </div>
+              </div>
+
+              <div class="form-floating">
+                <select class="form-select" id="ALERT_RULE_TRIGGER_TYPE"></select>
+                <label for="ALERT_RULE_TRIGGER_TYPE">Trigger</label>
+              </div>
+
+              <div id="ALERT_RULE_MAIN_CONTENT" class="d-grid gap-2">
+                <div
+                  id="ALERT_RULE_TRIGGER_CONFIG"
+                  class="d-none d-grid gap-2 bg-ghost rounded p-2"
+                ></div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                  <strong>Actions</strong>
+                  <button type="button" class="btn btn-sm btn-light" id="ALERT_RULE_ADD_ACTION">
+                    Add Action
+                  </button>
+                </div>
+                <div id="ALERT_RULE_ACTIONS_LIST" class="d-grid gap-2"></div>
+
+                <div class="d-grid gap-2 mt-1" id="ALERT_RULE_EDITOR_ACTIONS">
+                  <button type="button" class="btn btn-danger d-none" id="ALERT_RULE_DELETE">
+                    Delete
+                  </button>
+                  <button type="button" class="btn btn-success" id="ALERT_RULE_SAVE">Save</button>
+                </div>
+              </div>
+
+              <div id="ALERT_ACTION_EDITOR_PANEL" class="d-none rounded bg-ghost p-2 d-grid gap-2">
+                <div class="d-flex justify-content-between align-items-center">
+                  <strong id="ALERT_ACTION_EDITOR_TITLE">Edit Action</strong>
+                  <button type="button" class="btn btn-sm btn-light" id="ALERT_ACTION_EDITOR_CLOSE">
+                    Back to Actions
+                  </button>
+                </div>
+
+                <div class="form-floating">
+                  <select class="form-select" id="ALERT_ACTION_EDITOR_TYPE"></select>
+                  <label for="ALERT_ACTION_EDITOR_TYPE">Action Type</label>
+                </div>
+
+                <div id="ALERT_ACTION_EDITOR_SETTINGS" class="d-grid gap-2"></div>
+
+                <div class="row g-2">
+                  <div class="col-6 d-grid">
+                    <button type="button" class="btn btn-danger" id="ALERT_ACTION_EDITOR_DELETE">
+                      Delete Action
+                    </button>
+                  </div>
+                  <div class="col-6 d-grid">
+                    <button type="button" class="btn btn-success" id="ALERT_ACTION_EDITOR_SAVE">
+                      Save Action
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAK_MODAL_NETWORK_DISCOVERY"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_MODAL_NETWORK_DISCOVERY_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div class="rounded-3 p-2 bg-ghost-light">
+              <h6 class="mb-0">LAN Discovery</h6>
+            </div>
+
+            <div id="NETWORK_DISCOVERY_RESULTS" class="text-start mt-2">
+              <div class="table-responsive NETWORK_DISCOVERY_TABLE_WRAP">
+                <table
+                  class="table table-sm table-borderless align-middle NETWORK_DISCOVERY_TABLE mb-0"
+                >
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Address</th>
+                      <th>Source</th>
+                      <th>Details</th>
+                      <th class="text-end">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="NETWORK_DISCOVERY_RESULTS_BODY"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="d-grid mt-2">
+              <button
+                type="button"
+                class="btn btn-light"
+                id="NETWORK_DISCOVERY_TOGGLE_SCAN"
+                style="--scan-progress: 0%"
+              >
+                Start Scan
+              </button>
+            </div>
+
+            <div class="row g-2 mt-0">
+              <div class="col-12 d-grid">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="SHOWTRAL_MODAL_CONFIRMATION"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAL_MODAL_CONFIRMATION_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <h6 id="SHOWTRAK_CONFIRMATION_MESSAGE" class="mb-0">
+              Are you sure you want to do this?
+            </h6>
+
+            <div class="row g-2 mt-1">
+              <div class="col-6 d-grid">
+                <button type="button" class="btn btn-secondary" id="SHOWTRAK_CONFIRMATION_CANCEL">
+                  Cancel
+                </button>
+              </div>
+              <div class="col-6 d-grid">
+                <button type="button" class="btn btn-danger" id="SHOWTRAK_CONFIRMATION_CONFIRM">
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Read-only Client Info Modal (opens on double-click) -->
+    <div
+      class="modal fade"
+      id="SHOWTRAK_CLIENT_INFO"
+      tabindex="-1"
+      aria-labelledby="SHOWTRAK_CLIENT_INFO_Label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <div class="rounded-3 p-2 bg-ghost-light">
+              <h6 class="mb-0">Client Info</h6>
+            </div>
+
+            <div class="d-grid gap-2">
+              <div class="form-floating has-copy">
+                <input
+                  type="text"
+                  class="form-control disabled"
+                  id="CLIENT_INFO_NICKNAME"
+                  disabled
+                />
+                <label for="CLIENT_INFO_NICKNAME">Nickname</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_INFO_NICKNAME"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating has-copy">
+                <input
+                  type="text"
+                  class="form-control disabled"
+                  id="CLIENT_INFO_HOSTNAME"
+                  disabled
+                />
+                <label for="CLIENT_INFO_HOSTNAME">Hostname</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_INFO_HOSTNAME"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating has-copy">
+                <input
+                  type="text"
+                  class="form-control disabled"
+                  id="CLIENT_INFO_OPERATING_SYSTEM"
+                  disabled
+                />
+                <label for="CLIENT_INFO_OPERATING_SYSTEM">Operating System</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_INFO_OPERATING_SYSTEM"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating">
+                <input type="text" class="form-control disabled" id="CLIENT_INFO_GROUP" disabled />
+                <label for="CLIENT_INFO_GROUP">Group</label>
+              </div>
+              <div class="form-floating has-copy">
+                <input type="text" class="form-control disabled" id="CLIENT_INFO_IP" disabled />
+                <label for="CLIENT_INFO_IP">IP</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_INFO_IP"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating has-copy d-none" id="CLIENT_INFO_MAC_WRAPPER">
+                <input type="text" class="form-control disabled" id="CLIENT_INFO_MAC" disabled />
+                <label for="CLIENT_INFO_MAC">MAC Address</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_INFO_MAC"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating has-copy">
+                <input type="text" class="form-control disabled" id="CLIENT_INFO_UUID" disabled />
+                <label for="CLIENT_INFO_UUID">Client ID</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_INFO_UUID"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating has-copy">
+                <input
+                  type="text"
+                  class="form-control disabled"
+                  id="CLIENT_INFO_VERSION"
+                  disabled
+                />
+                <label for="CLIENT_INFO_VERSION">Client Version</label>
+                <button
+                  type="button"
+                  class="copy-field-btn"
+                  data-target="#CLIENT_INFO_VERSION"
+                  title="Copy"
+                >
+                  <i class="bi bi-clipboard"></i>
+                </button>
+              </div>
+              <div class="form-floating">
+                <input type="text" class="form-control disabled" id="CLIENT_INFO_STATUS" disabled />
+                <label for="CLIENT_INFO_STATUS">Status</label>
+              </div>
+              <div class="rounded-3 p-2 bg-ghost-light">
+                <h6 class="mb-0">Usage</h6>
+              </div>
+              <div id="CLIENT_INFO_VITALS" class="d-grid gap-2">
+                <div class="text-sm d-flex justify-content-between">
+                  <span>CPU</span>
+                  <span id="CLIENT_INFO_CPU_LABEL">0%</span>
+                </div>
+                <div class="progress">
+                  <div
+                    id="CLIENT_INFO_CPU_BAR"
+                    class="progress-bar bg-white"
+                    role="progressbar"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <div class="text-sm d-flex justify-content-between">
+                  <span>RAM</span>
+                  <span id="CLIENT_INFO_RAM_LABEL">0%</span>
+                </div>
+                <div class="progress">
+                  <div
+                    id="CLIENT_INFO_RAM_BAR"
+                    class="progress-bar bg-white"
+                    role="progressbar"
+                    style="width: 0%"
+                  ></div>
+                </div>
+              </div>
+              <div class="rounded-3 p-2 bg-ghost-light">
+                <h6 class="mb-0">Connected USB Devices</h6>
+              </div>
+              <div id="SHOWTRAK_CLIENT_INFO_USB_DEVICES" class="d-grid gap-2"></div>
+
+              <div class="rounded-3 p-2 bg-ghost-light">
+                <h6 class="mb-0">Network Interfaces</h6>
+              </div>
+              <div class="btn-group w-100" role="group" aria-label="Network family filter">
+                <button
+                  type="button"
+                  id="SHOWTRAK_CLIENT_INFO_NET_FAMILY_V4"
+                  class="btn btn-light"
+                  aria-pressed="true"
+                >
+                  IPv4
+                </button>
+                <button
+                  type="button"
+                  id="SHOWTRAK_CLIENT_INFO_NET_FAMILY_V6"
+                  class="btn btn-outline-light"
+                  aria-pressed="false"
+                >
+                  IPv6
+                </button>
+              </div>
+              <div id="SHOWTRAK_CLIENT_INFO_NET_INTERFACES" class="d-grid gap-2"></div>
+              <div class="rounded-3 p-2 bg-ghost-light">
+                <h6 class="mb-0">Running Applications</h6>
+              </div>
+              <div id="SHOWTRAK_CLIENT_INFO_RUNNING_APPLICATIONS" class="d-grid gap-2"></div>
+            </div>
+
+            <div class="row g-2 mt-2">
+              <div class="col-12 d-grid">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <footer>
+    <script src="./vendors/jquery/index.js" defer></script>
+    <script src="./vendors/bootstrap/js/bootstrap.bundle.min.js" defer></script>
+    <script src="./vendors/toastify/index.js" defer></script>
+    <script src="./vendors/howler/index.min.js"></script>
+    <script src="./vendors/qrcode/qrcode.min.js"></script>
+    <!-- app.js was split into ordered topical modules. They are classic scripts
+         that share global scope and MUST load in this order (defer preserves
+         document order). Concatenated, they are identical to the original app.js. -->
+    <script src="./js/app/01-state.js" defer></script>
+    <script src="./js/app/02-mode.js" defer></script>
+    <script src="./js/app/03-settings.js" defer></script>
+    <script src="./js/app/04-utils.js" defer></script>
+    <script src="./js/app/05-keyboard.js" defer></script>
+    <script src="./js/app/09-osc-feeds.js" defer></script>
+    <script src="./js/app/10-alerts-tray.js" defer></script>
+    <script src="./js/app/11-modals.js" defer></script>
+    <script src="./js/app/13-alert-rules.js" defer></script>
+    <script src="./js/app/14-selection-init.js" defer></script>
+  </footer>
+</html>

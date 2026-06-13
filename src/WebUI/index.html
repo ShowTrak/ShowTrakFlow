@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+    />
+    <title>ShowTrak Web UI</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0c091c" />
+    <link rel="apple-touch-icon" href="/images/icon.png" />
+    <link rel="stylesheet" href="/vendors/fonts/inter.css" />
+    <link rel="stylesheet" href="/vendors/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/vendors/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="compact">
+    <!-- Connection status banner (web socket detection) -->
+    <div id="connBanner" class="conn-banner hidden" role="status" aria-live="polite">
+      <i class="bi bi-wifi-off"></i>
+      <span id="connBannerText">Reconnecting to ShowTrak Flow…</span>
+    </div>
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="/images/icon.png" alt="ShowTrak" class="logo" />
+        <span class="brand-name">ShowTrak</span>
+      </div>
+      <div class="topbar-right">
+        <span id="connDot" class="conn-dot connecting" title="Connecting…"></span>
+        <button
+          id="viewToggleBtn"
+          class="topbar-btn"
+          type="button"
+          title="Toggle compact / expanded view"
+        >
+          <i class="bi bi-arrows-angle-expand" id="viewToggleIcon"></i>
+          <span class="btn-label" id="viewToggleLabel">Expand</span>
+        </button>
+        <button id="logoutBtn" class="topbar-btn hidden" type="button">
+          <i class="bi bi-box-arrow-right"></i>
+          <span class="btn-label">Logout</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main id="appMain" class="content hidden">
+      <div id="APPLICATION_CONTENT"></div>
+    </main>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="overlay loading-overlay">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Login / passcode overlay -->
+    <div id="loginOverlay" class="overlay login-overlay hidden">
+      <div class="login-card">
+        <img src="/images/icon.png" alt="ShowTrak" class="login-logo" />
+        <h5 class="mb-1">ShowTrak Web UI</h5>
+        <div id="disabledNotice" class="disabled-notice hidden" role="status" aria-live="polite">
+          <strong>Web UI disabled.</strong>
+          <span>ShowTrak Preferences &gt; Web UI &gt; Web UI Enabled to enable.</span>
+        </div>
+        <div id="authControls">
+          <p class="text-muted mb-3" id="loginSubtitle">Enter the access passcode</p>
+          <div id="pinDisplay" class="pin-display" aria-label="Passcode">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+          </div>
+          <div id="pinError" class="pin-error hidden">Incorrect passcode</div>
+          <div class="keypad">
+            <button class="keypad-btn" data-key="1" type="button">1</button>
+            <button class="keypad-btn" data-key="2" type="button">2</button>
+            <button class="keypad-btn" data-key="3" type="button">3</button>
+            <button class="keypad-btn" data-key="4" type="button">4</button>
+            <button class="keypad-btn" data-key="5" type="button">5</button>
+            <button class="keypad-btn" data-key="6" type="button">6</button>
+            <button class="keypad-btn" data-key="7" type="button">7</button>
+            <button class="keypad-btn" data-key="8" type="button">8</button>
+            <button class="keypad-btn" data-key="9" type="button">9</button>
+            <button
+              class="keypad-btn keypad-muted"
+              data-key="clear"
+              type="button"
+              aria-label="Clear"
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
+            <button class="keypad-btn" data-key="0" type="button">0</button>
+            <button
+              class="keypad-btn keypad-muted"
+              data-key="back"
+              type="button"
+              aria-label="Backspace"
+            >
+              <i class="bi bi-backspace"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation modal -->
+    <div id="confirmModal" class="overlay confirm-overlay hidden" role="dialog" aria-modal="true">
+      <div class="confirm-card">
+        <div id="confirmText" class="confirm-text">Are you sure?</div>
+        <div class="confirm-actions">
+          <button id="confirmCancel" class="btn btn-outline-light flex-fill" type="button">
+            Cancel
+          </button>
+          <button id="confirmOk" class="btn btn-light flex-fill" type="button">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast host -->
+    <div id="toastHost" class="toast-host" aria-live="polite"></div>
+
+    <script src="/vendors/socket.io/socket.io.min.js"></script>
+    <script src="/vendors/jquery.js"></script>
+    <script src="/main.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
