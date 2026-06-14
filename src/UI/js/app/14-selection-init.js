@@ -951,6 +951,36 @@ async function Init() {
     });
   }
 
+  const sideMenuButtons = Array.from(document.querySelectorAll('.app-side-icon-btn'));
+  const sideMenuPanels = Array.from(document.querySelectorAll('.app-side-menu-panel'));
+  let activeSideMenu = null;
+
+  const setSideMenu = (menuKey) => {
+    const nextMenu = menuKey && activeSideMenu === menuKey ? null : menuKey;
+    activeSideMenu = nextMenu;
+    document.body.classList.toggle('app-shell-menu-open', Boolean(nextMenu));
+
+    for (const button of sideMenuButtons) {
+      const isActive = button.dataset.sideMenu === nextMenu;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    }
+
+    for (const panel of sideMenuPanels) {
+      const isActive = panel.dataset.menuPanel === nextMenu;
+      panel.classList.toggle('active', isActive);
+    }
+
+    const sideMenu = document.getElementById('APP_SIDE_MENU');
+    if (sideMenu) {
+      sideMenu.setAttribute('aria-hidden', String(!nextMenu));
+    }
+  };
+
+  $(document).on('click', '.app-side-icon-btn', function () {
+    setSideMenu($(this).attr('data-side-menu'));
+  });
+
   Config = await window.API.GetConfig();
   $('#APPLICATION_NAVBAR_TITLE').text(`${Config.Application.Name}`);
   $('#APPLICATION_NAVBAR_STATUS').text('');

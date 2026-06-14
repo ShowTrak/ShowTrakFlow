@@ -9,6 +9,7 @@ require('./monitoring-validators')(Manager);
 require('./dummy-validators')(Manager);
 require('./alert-validators')(Manager);
 require('./system-validators')(Manager);
+require('./flow-validators')(Manager);
 
 module.exports = {
   Manager,

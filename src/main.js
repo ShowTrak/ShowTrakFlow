@@ -40,6 +40,13 @@ const { Manager: BackupManager } = require('./Modules/BackupManager');
 const { Manager: BroadcastManager } = require('./Modules/Broadcast');
 const { Manager: SettingsManager } = require('./Modules/SettingsManager');
 const { Manager: IPCValidation } = require('./Modules/IPCValidation');
+const { Manager: FlowGroupsManager } = require('./Modules/FlowGroupsManager');
+const { Manager: SceneManager } = require('./Modules/SceneManager');
+const { Manager: QueueManager } = require('./Modules/QueueManager');
+const { Manager: FlagManager } = require('./Modules/FlagManager');
+const { Manager: RemoteUsersManager } = require('./Modules/RemoteUsersManager');
+const { Manager: ShowColoursManager } = require('./Modules/ShowColoursManager');
+const { Manager: ChatRoomsManager } = require('./Modules/ChatRoomsManager');
 const { OSC } = require('./Modules/OSC');
 const { Manager: ModeManager } = require('./Modules/ModeManager');
 const { Wait } = require('./Modules/Utils');
@@ -141,6 +148,7 @@ let bypassShutdownConfirmation = false;
 let shutdownCleanupInFlight = false;
 let shutdownCleanupComplete = false;
 let quittingForUpdate = false;
+let SceneTimerHeartbeat = null;
 
 function hasMainWindow() {
   return MainWindow && !MainWindow.isDestroyed();
@@ -344,6 +352,15 @@ app.whenReady().then(async () => {
     Logger.log('MainWindow finished loading UI');
     sendMainWindowFullscreenChanged(MainWindow.isFullScreen());
     AlertsManager.Init().catch((Err) => Logger.error('Failed to init AlertsManager:', Err));
+    FlowGroupsManager.Init().catch((Err) => Logger.error('Failed to init FlowGroupsManager:', Err));
+    SceneManager.Init().catch((Err) => Logger.error('Failed to init SceneManager:', Err));
+    QueueManager.Init().catch((Err) => Logger.error('Failed to init QueueManager:', Err));
+    FlagManager.Init().catch((Err) => Logger.error('Failed to init FlagManager:', Err));
+    RemoteUsersManager.Init().catch((Err) =>
+      Logger.error('Failed to init RemoteUsersManager:', Err)
+    );
+    ShowColoursManager.Init().catch((Err) => Logger.error('Failed to init ShowColoursManager:', Err));
+    ChatRoomsManager.Init().catch((Err) => Logger.error('Failed to init ChatRoomsManager:', Err));
     await Wait(800);
     PreloaderWindow.close();
     MainWindow.show();
@@ -600,12 +617,509 @@ app.whenReady().then(async () => {
     return AlertsManager.SetActionsEnabled(!!Enabled);
   });
 
+  // ---- Flows ----
+  RPC.handle('Flow:GetAll', async () => {
+    const [Err, Flows] = await FlowGroupsManager.GetAllFlows();
+    if (Err) return [];
+    return Flows || [];
+  });
+
+  RPC.handle('Flow:Get', async (_Event, FlowID) => {
+    try {
+      FlowID = IPCValidation.FlowID(FlowID);
+    } catch {
+      return null;
+    }
+    const [Err, Flow] = await FlowGroupsManager.GetFlowWithGroups(FlowID);
+    if (Err) return null;
+    return Flow;
+  });
+
+  RPC.handle('Flow:Create', async (_Event, Payload) => {
+    try {
+      Payload = IPCValidation.FlowPayload(Payload);
+      if (!Payload.Label) throw new Error('Flow label is required');
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Flow] = await FlowGroupsManager.CreateFlow(Payload);
+    if (Err) return [Err, null];
+    return [null, Flow];
+  });
+
+  RPC.handle('Flow:Update', async (_Event, FlowID, Payload) => {
+    try {
+      FlowID = IPCValidation.FlowID(FlowID);
+      Payload = IPCValidation.FlowPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Flow] = await FlowGroupsManager.UpdateFlow(FlowID, Payload);
+    if (Err) return [Err, null];
+    return [null, Flow];
+  });
+
+  RPC.handle('Flow:Delete', async (_Event, FlowID) => {
+    try {
+      FlowID = IPCValidation.FlowID(FlowID);
+    } catch (error) {
+      return validationErrorTuple(error, false);
+    }
+    const [Err, Result] = await FlowGroupsManager.DeleteFlow(FlowID);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  RPC.handle('Flow:SetOrder', async (_Event, OrderedFlowIDs) => {
+    try {
+      OrderedFlowIDs = IPCValidation.FlowIDList(OrderedFlowIDs);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Flows] = await FlowGroupsManager.SetFlowOrder(OrderedFlowIDs);
+    if (Err) return [Err, null];
+    return [null, Flows];
+  });
+
+  // ---- Flow Groups ----
+  RPC.handle('Flow:GetGroups', async (_Event, FlowID) => {
+    try {
+      FlowID = IPCValidation.FlowID(FlowID);
+    } catch {
+      return [];
+    }
+    const [Err, Groups] = await FlowGroupsManager.GetGroups(FlowID);
+    if (Err) return [];
+    return Groups || [];
+  });
+
+  RPC.handle('Flow:CreateGroup', async (_Event, FlowID, Payload) => {
+    try {
+      FlowID = IPCValidation.FlowID(FlowID);
+      Payload = IPCValidation.FlowGroupPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Group] = await FlowGroupsManager.CreateGroup(FlowID, Payload);
+    if (Err) return [Err, null];
+    return [null, Group];
+  });
+
+  RPC.handle('Flow:UpdateGroup', async (_Event, RowID, Payload) => {
+    try {
+      RowID = IPCValidation.FlowGroupRowID(RowID);
+      Payload = IPCValidation.FlowGroupPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Group] = await FlowGroupsManager.UpdateGroup(RowID, Payload);
+    if (Err) return [Err, null];
+    return [null, Group];
+  });
+
+  RPC.handle('Flow:DeleteGroup', async (_Event, RowID) => {
+    try {
+      RowID = IPCValidation.FlowGroupRowID(RowID);
+    } catch (error) {
+      return validationErrorTuple(error, false);
+    }
+    const [Err, Result] = await FlowGroupsManager.DeleteGroup(RowID);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  RPC.handle('Flow:SetGroupOrder', async (_Event, FlowID, OrderedRowIDs) => {
+    try {
+      FlowID = IPCValidation.FlowID(FlowID);
+      OrderedRowIDs = IPCValidation.FlowGroupRowIDList(OrderedRowIDs);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Groups] = await FlowGroupsManager.SetGroupOrder(FlowID, OrderedRowIDs);
+    if (Err) return [Err, null];
+    return [null, Groups];
+  });
+
+  // ---- Queue (Active Show) ----
+  RPC.handle('Queue:GetAll', async () => {
+    const [Err, Queue] = await QueueManager.GetAll();
+    if (Err) return [];
+    return Queue || [];
+  });
+
+  RPC.handle('Queue:LoadFlow', async (_Event, FlowID) => {
+    try {
+      FlowID = IPCValidation.FlowID(FlowID);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Queue] = await QueueManager.LoadFlow(FlowID);
+    if (Err) return [Err, null];
+    return [null, Queue];
+  });
+
+  RPC.handle('Queue:AddGroup', async (_Event, Payload) => {
+    try {
+      Payload = IPCValidation.QueueGroupPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Group] = await QueueManager.AddGroup(Payload);
+    if (Err) return [Err, null];
+    return [null, Group];
+  });
+
+  RPC.handle('Queue:UpdateGroup', async (_Event, InstanceID, Payload) => {
+    try {
+      InstanceID = IPCValidation.QueueInstanceID(InstanceID);
+      Payload = IPCValidation.QueueGroupPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Group] = await QueueManager.UpdateGroup(InstanceID, Payload);
+    if (Err) return [Err, null];
+    return [null, Group];
+  });
+
+  RPC.handle('Queue:DeleteGroup', async (_Event, InstanceID) => {
+    try {
+      InstanceID = IPCValidation.QueueInstanceID(InstanceID);
+    } catch (error) {
+      return validationErrorTuple(error, false);
+    }
+    const [Err, Result] = await QueueManager.DeleteGroup(InstanceID);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  RPC.handle('Queue:SetOrder', async (_Event, OrderedInstanceIDs) => {
+    try {
+      OrderedInstanceIDs = IPCValidation.QueueInstanceIDList(OrderedInstanceIDs);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Queue] = await QueueManager.SetOrder(OrderedInstanceIDs);
+    if (Err) return [Err, null];
+    return [null, Queue];
+  });
+
+  RPC.handle('Queue:SetLocation', async (_Event, InstanceID, Location, SceneID) => {
+    try {
+      InstanceID = IPCValidation.QueueInstanceID(InstanceID);
+      Location = IPCValidation.QueueLocation(Location);
+      SceneID = SceneID == null ? null : IPCValidation.SceneID(SceneID);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Group] = await QueueManager.SetLocation(InstanceID, Location, SceneID);
+    if (Err) return [Err, null];
+    return [null, Group];
+  });
+
+  RPC.handle('Queue:Reset', async () => {
+    const [Err, Result] = await QueueManager.Reset();
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  // ---- Scenes ----
+  RPC.handle('Scene:GetAll', async () => {
+    const [Err, Scenes] = await SceneManager.GetAll();
+    if (Err) return [];
+    return Scenes || [];
+  });
+
+  RPC.handle('Scene:Create', async (_Event, Payload) => {
+    try {
+      Payload = IPCValidation.ScenePayload(Payload);
+      if (!Payload.Label) throw new Error('Scene label is required');
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Scene] = await SceneManager.Create(Payload);
+    if (Err) return [Err, null];
+    return [null, Scene];
+  });
+
+  RPC.handle('Scene:Update', async (_Event, SceneID, Payload) => {
+    try {
+      SceneID = IPCValidation.SceneID(SceneID);
+      Payload = IPCValidation.ScenePayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Scene] = await SceneManager.Update(SceneID, Payload);
+    if (Err) return [Err, null];
+    return [null, Scene];
+  });
+
+  RPC.handle('Scene:Delete', async (_Event, SceneID) => {
+    try {
+      SceneID = IPCValidation.SceneID(SceneID);
+    } catch (error) {
+      return validationErrorTuple(error, false);
+    }
+    const [Err, Result] = await SceneManager.Delete(SceneID);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  RPC.handle('Scene:SetOrder', async (_Event, OrderedSceneIDs) => {
+    try {
+      OrderedSceneIDs = IPCValidation.SceneIDList(OrderedSceneIDs);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Scenes] = await SceneManager.SetOrder(OrderedSceneIDs);
+    if (Err) return [Err, null];
+    return [null, Scenes];
+  });
+
+  RPC.handle('Scene:StartTimer', async (_Event, SceneID) => {
+    try {
+      SceneID = IPCValidation.SceneID(SceneID);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Scene] = await SceneManager.StartTimer(SceneID);
+    if (Err) return [Err, null];
+    return [null, Scene];
+  });
+
+  // ---- Flag Definitions (Show Settings) ----
+  RPC.handle('Flag:GetAll', async () => {
+    const [Err, Flags] = await FlagManager.GetAll();
+    if (Err) return [];
+    return Flags || [];
+  });
+
+  RPC.handle('Flag:Create', async (_Event, Payload) => {
+    try {
+      Payload = IPCValidation.FlagPayload(Payload);
+      if (!Payload.Label) throw new Error('Flag label is required');
+      if (!Payload.Icon) throw new Error('Flag icon is required');
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Flag] = await FlagManager.Create(Payload);
+    if (Err) return [Err, null];
+    return [null, Flag];
+  });
+
+  RPC.handle('Flag:Update', async (_Event, FlagID, Payload) => {
+    try {
+      FlagID = IPCValidation.FlagID(FlagID);
+      Payload = IPCValidation.FlagPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Flag] = await FlagManager.Update(FlagID, Payload);
+    if (Err) return [Err, null];
+    return [null, Flag];
+  });
+
+  RPC.handle('Flag:Delete', async (_Event, FlagID) => {
+    try {
+      FlagID = IPCValidation.FlagID(FlagID);
+    } catch (error) {
+      return validationErrorTuple(error, false);
+    }
+    const [Err, Result] = await FlagManager.Delete(FlagID);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  RPC.handle('Flag:SetOrder', async (_Event, OrderedFlagIDs) => {
+    try {
+      OrderedFlagIDs = IPCValidation.FlagIDList(OrderedFlagIDs);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Flags] = await FlagManager.SetOrder(OrderedFlagIDs);
+    if (Err) return [Err, null];
+    return [null, Flags];
+  });
+
+  // ---- Remote Users (Show Settings) ----
+  RPC.handle('RemoteUser:GetAll', async () => {
+    const [Err, Users] = await RemoteUsersManager.GetAll();
+    if (Err) return [];
+    return Users || [];
+  });
+
+  RPC.handle('RemoteUser:Create', async (_Event, Payload) => {
+    try {
+      Payload = IPCValidation.RemoteUserPayload(Payload);
+      if (!Payload.Username) throw new Error('Username is required');
+      if (!Payload.Pin) throw new Error('PIN is required');
+      if (!Payload.Icon) throw new Error('Icon is required');
+      if (!Payload.Colour) throw new Error('Colour is required');
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, User] = await RemoteUsersManager.Create(Payload);
+    if (Err) return [Err, null];
+    return [null, User];
+  });
+
+  RPC.handle('RemoteUser:Update', async (_Event, RemoteUserID, Payload) => {
+    try {
+      RemoteUserID = IPCValidation.RemoteUserID(RemoteUserID);
+      Payload = IPCValidation.RemoteUserPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, User] = await RemoteUsersManager.Update(RemoteUserID, Payload);
+    if (Err) return [Err, null];
+    return [null, User];
+  });
+
+  RPC.handle('RemoteUser:Delete', async (_Event, RemoteUserID) => {
+    try {
+      RemoteUserID = IPCValidation.RemoteUserID(RemoteUserID);
+    } catch (error) {
+      return validationErrorTuple(error, false);
+    }
+    const [Err, Result] = await RemoteUsersManager.Delete(RemoteUserID);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  // ---- Show Colours (Show Settings) ----
+  RPC.handle('ShowColour:GetAll', async () => {
+    const [Err, Colours] = await ShowColoursManager.GetAll();
+    if (Err) return [];
+    return Colours || [];
+  });
+
+  RPC.handle('ShowColour:Create', async (_Event, Payload) => {
+    try {
+      Payload = IPCValidation.ShowColourPayload(Payload);
+      if (!Payload.Label) throw new Error('Show colour label is required');
+      if (!Payload.Colour) throw new Error('Show colour hex code is required');
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Colour] = await ShowColoursManager.Create(Payload);
+    if (Err) return [Err, null];
+    return [null, Colour];
+  });
+
+  RPC.handle('ShowColour:Update', async (_Event, ShowColourID, Payload) => {
+    try {
+      ShowColourID = IPCValidation.ShowColourID(ShowColourID);
+      Payload = IPCValidation.ShowColourPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Colour] = await ShowColoursManager.Update(ShowColourID, Payload);
+    if (Err) return [Err, null];
+    return [null, Colour];
+  });
+
+  RPC.handle('ShowColour:Delete', async (_Event, ShowColourID) => {
+    try {
+      ShowColourID = IPCValidation.ShowColourID(ShowColourID);
+    } catch (error) {
+      return validationErrorTuple(error, false);
+    }
+    const [Err, Result] = await ShowColoursManager.Delete(ShowColourID);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  RPC.handle('ShowColour:ResetDefaults', async () => {
+    const [Err, Colours] = await ShowColoursManager.ResetToDefaults();
+    if (Err) return [Err, null];
+    return [null, Colours];
+  });
+
+  // ---- Chat Rooms ----
+  RPC.handle('ChatRoom:GetAll', async () => {
+    const [Err, Rooms] = await ChatRoomsManager.GetAllRooms();
+    if (Err) return [];
+    return Rooms || [];
+  });
+
+  RPC.handle('ChatRoom:GetMessages', async (_Event, RoomType, RoomID) => {
+    try {
+      RoomType = IPCValidation.ChatRoomType(RoomType);
+      RoomID = Number(RoomID);
+      if (!Number.isInteger(RoomID) || RoomID <= 0) throw new Error('Room ID must be a positive integer');
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Messages] = await ChatRoomsManager.GetMessages(RoomType, RoomID);
+    if (Err) return [Err, null];
+    return [null, Messages || []];
+  });
+
+  RPC.handle('ChatRoom:SendMessage', async (_Event, RoomType, RoomID, Message) => {
+    try {
+      RoomType = IPCValidation.ChatRoomType(RoomType);
+      RoomID = Number(RoomID);
+      if (!Number.isInteger(RoomID) || RoomID <= 0) throw new Error('Room ID must be a positive integer');
+      Message = IPCValidation.ChatMessageText(Message);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Result] = await ChatRoomsManager.SendControlMessage(RoomType, RoomID, Message);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
+  RPC.handle('ChatRoom:CreateCustom', async (_Event, Payload) => {
+    try {
+      Payload = IPCValidation.CustomChatRoomPayload(Payload);
+      if (!Payload.Label) throw new Error('Chat room label is required');
+      if (!Payload.Colour) throw new Error('Chat room colour is required');
+      if (!Payload.Icon) throw new Error('Chat room icon is required');
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Room] = await ChatRoomsManager.CreateCustomRoom(Payload);
+    if (Err) return [Err, null];
+    return [null, Room];
+  });
+
+  RPC.handle('ChatRoom:UpdateCustom', async (_Event, RoomID, Payload) => {
+    try {
+      RoomID = Number(RoomID);
+      if (!Number.isInteger(RoomID) || RoomID <= 0) throw new Error('Room ID must be a positive integer');
+      Payload = IPCValidation.CustomChatRoomPayload(Payload);
+    } catch (error) {
+      return validationErrorTuple(error);
+    }
+    const [Err, Room] = await ChatRoomsManager.UpdateCustomRoom(RoomID, Payload);
+    if (Err) return [Err, null];
+    return [null, Room];
+  });
+
+  RPC.handle('ChatRoom:DeleteCustom', async (_Event, RoomID) => {
+    try {
+      RoomID = Number(RoomID);
+      if (!Number.isInteger(RoomID) || RoomID <= 0) throw new Error('Room ID must be a positive integer');
+    } catch (error) {
+      return validationErrorTuple(error, false);
+    }
+    const [Err, Result] = await ChatRoomsManager.DeleteCustomRoom(RoomID);
+    if (Err) return [Err, null];
+    return [null, Result];
+  });
+
   // Renderer signaled it (re)loaded: push the current authoritative state.
   RPC.handle('Loaded', async () => {
     Logger.log('Application Page Hot Reloaded');
     await UpdateSettings();
     await UpdateOSCList();
     await UpdateAlertRuleList();
+    await UpdateFlowList();
+    await UpdateQueue();
+    await UpdateSceneList();
+    await UpdateFlagList();
+    await UpdateRemoteUserList();
+    await UpdateShowColourList();
+    await UpdateChatRoomList();
     // Push current application mode to renderer on initial load
     if (MainWindow && !MainWindow.isDestroyed()) {
       MainWindow.webContents.send('ModeUpdated', ModeManager.Get());
@@ -825,6 +1339,89 @@ async function CreateShowTrakAlert(Payload) {
   MainWindow.webContents.send('CreateShowTrakAlert', Payload);
 }
 BroadcastManager.on('CreateShowTrakAlert', CreateShowTrakAlert);
+
+// ---- ShowTrak Flow list fan-out ----
+async function UpdateFlowList() {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  const [Err, Flows] = await FlowGroupsManager.GetAllFlows();
+  if (Err) return;
+  MainWindow.webContents.send('SetFlowList', Flows || []);
+}
+BroadcastManager.on('FlowListChanged', UpdateFlowList);
+
+async function FlowGroupsChanged(FlowID) {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  MainWindow.webContents.send('FlowGroupsChanged', FlowID);
+}
+BroadcastManager.on('FlowGroupsChanged', FlowGroupsChanged);
+
+async function UpdateQueue() {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  const [Err, Queue] = await QueueManager.GetAll();
+  if (Err) return;
+  MainWindow.webContents.send('SetQueue', Queue || []);
+}
+BroadcastManager.on('QueueChanged', UpdateQueue);
+
+async function UpdateSceneList() {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  const [Err, Scenes] = await SceneManager.GetAll();
+  if (Err) return;
+  MainWindow.webContents.send('SetSceneList', Scenes || []);
+}
+BroadcastManager.on('SceneListChanged', UpdateSceneList);
+
+function EnsureSceneTimerHeartbeat() {
+  if (SceneTimerHeartbeat) return;
+  SceneTimerHeartbeat = setInterval(async () => {
+    if (!MainWindow || MainWindow.isDestroyed()) return;
+    const [Err, Scenes] = await SceneManager.GetAll();
+    if (Err || !Array.isArray(Scenes) || !Scenes.length) return;
+    const hasRunningTimers = Scenes.some((Scene) => Scene && Scene.IsTimerRunning === true);
+    if (!hasRunningTimers) return;
+    MainWindow.webContents.send('SetSceneList', Scenes);
+  }, 250);
+}
+EnsureSceneTimerHeartbeat();
+
+async function UpdateFlagList() {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  const [Err, Flags] = await FlagManager.GetAll();
+  if (Err) return;
+  MainWindow.webContents.send('SetFlagList', Flags || []);
+}
+BroadcastManager.on('FlagListChanged', UpdateFlagList);
+
+async function UpdateRemoteUserList() {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  const [Err, Users] = await RemoteUsersManager.GetAll();
+  if (Err) return;
+  MainWindow.webContents.send('SetRemoteUserList', Users || []);
+}
+BroadcastManager.on('RemoteUserListChanged', UpdateRemoteUserList);
+
+async function UpdateShowColourList() {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  const [Err, Colours] = await ShowColoursManager.GetAll();
+  if (Err) return;
+  MainWindow.webContents.send('SetShowColourList', Colours || []);
+}
+BroadcastManager.on('ShowColourListChanged', UpdateShowColourList);
+
+async function UpdateChatRoomList() {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  const [Err, Rooms] = await ChatRoomsManager.GetAllRooms();
+  if (Err) return;
+  MainWindow.webContents.send('SetChatRoomList', Rooms || []);
+}
+BroadcastManager.on('ChatRoomListChanged', UpdateChatRoomList);
+BroadcastManager.on('SceneListChanged', UpdateChatRoomList);
+
+async function ForwardChatMessagesChanged(Payload) {
+  if (!MainWindow || MainWindow.isDestroyed()) return;
+  MainWindow.webContents.send('ChatMessagesChanged', Payload || null);
+}
+BroadcastManager.on('ChatMessagesChanged', ForwardChatMessagesChanged);
 
 // Thin wrapper to surface system notifications in the renderer.
 async function Notify(Message, Type = 'info', Duration = 5000) {

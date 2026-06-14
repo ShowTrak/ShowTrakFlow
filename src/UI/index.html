@@ -24,6 +24,58 @@
       <span class="no-drag" id="APPLICATION_NAVBAR_STATUS"></span>
       <span class="no-drag" id="APPLICATION_NAVBAR_FILE"></span>
     </div>
+    <nav id="APP_SIDEBAR_RAIL" class="no-drag" aria-label="Primary Sidebar">
+      <button
+        type="button"
+        class="app-side-icon-btn"
+        data-side-menu="queue"
+        title="Queue"
+        aria-label="Queue"
+        aria-pressed="false"
+      >
+        <i class="bi bi-list-ol"></i>
+      </button>
+      <button
+        type="button"
+        class="app-side-icon-btn"
+        data-side-menu="flows"
+        title="Flows"
+        aria-label="Flows"
+        aria-pressed="false"
+      >
+        <i class="bi bi-diagram-3"></i>
+      </button>
+      <button
+        type="button"
+        class="app-side-icon-btn"
+        data-side-menu="chat"
+        title="Chat"
+        aria-label="Chat"
+        aria-pressed="false"
+      >
+        <i class="bi bi-chat-square-text"></i>
+      </button>
+      <button
+        type="button"
+        class="app-side-icon-btn"
+        data-side-menu="showsettings"
+        title="Show Settings"
+        aria-label="Show Settings"
+        aria-pressed="false"
+      >
+        <i class="bi bi-flag"></i>
+      </button>
+    </nav>
+    <aside id="APP_SIDE_MENU" class="no-drag" aria-hidden="true">
+      <section class="app-side-menu-panel" data-menu-panel="queue" id="SF_PANEL_QUEUE"></section>
+      <section class="app-side-menu-panel" data-menu-panel="flows" id="SF_PANEL_FLOWS"></section>
+      <section class="app-side-menu-panel" data-menu-panel="chat" id="SF_PANEL_CHAT"></section>
+      <section
+        class="app-side-menu-panel"
+        data-menu-panel="showsettings"
+        id="SF_PANEL_SETTINGS"
+      ></section>
+    </aside>
     <div id="APPLICATION_CONTAINER" class="h-100">
       <div id="APPLICATION" class="container-fluid text-center text-light p-0 d-grid">
         <div id="APPLICATION_CONTENT" class="pb-3"></div>
@@ -88,6 +140,12 @@
               <i class="bi bi-plus-circle-fill"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end" id="ADD_MONITORING_TARGET_MENU">
+              <li>
+                <button type="button" class="dropdown-item" id="SF_CREATE_SCENE_BTN">
+                  Create Scene
+                </button>
+              </li>
+              <li><hr class="dropdown-divider" /></li>
               <li>
                 <button
                   type="button"
@@ -1718,10 +1776,12 @@
     <script src="./js/app/03-settings.js" defer></script>
     <script src="./js/app/04-utils.js" defer></script>
     <script src="./js/app/05-keyboard.js" defer></script>
+    <script src="./js/app/06-icon-picker.js" defer></script>
     <script src="./js/app/09-osc-feeds.js" defer></script>
     <script src="./js/app/10-alerts-tray.js" defer></script>
     <script src="./js/app/11-modals.js" defer></script>
     <script src="./js/app/13-alert-rules.js" defer></script>
     <script src="./js/app/14-selection-init.js" defer></script>
+    <script src="./js/app/15-flow-ui.js" defer></script>
   </footer>
 </html>

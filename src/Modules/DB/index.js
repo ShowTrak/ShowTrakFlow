@@ -99,6 +99,30 @@ Manager.InitializeSchema = async () => {
 
   schemaInitializationPromise = (async () => {
     let Tables = require('./schema.js');
+    // Reconcile tables left behind by removed features whose names collide with
+    // the current schema but whose structure is incompatible. Detection is gated
+    // on a legacy-only marker column, so a table matching the current schema is
+    // never touched. Runs before the CREATE loop so the correct definition is
+    // (re)created in the same launch.
+    const LegacyReplacements = Array.isArray(Tables.LegacyReplacements)
+      ? Tables.LegacyReplacements
+      : [];
+    for (const Replacement of LegacyReplacements) {
+      const Table = Replacement && Replacement.Table;
+      const LegacyColumn = Replacement && Replacement.LegacyColumn;
+      if (!Table || !LegacyColumn) continue;
+      const [PErr, Cols] = await Manager.All(`PRAGMA table_info(\`${Table}\`)`);
+      if (PErr) {
+        Logger.databaseError(`Legacy reconcile probe failed for ${Table}`, PErr);
+        continue;
+      }
+      if (!Cols || !Cols.length) continue; // table does not exist yet
+      const IsLegacy = Cols.some((c) => c && c.name === LegacyColumn);
+      if (!IsLegacy) continue;
+      Logger.database(`Dropping incompatible legacy table: ${Table}`);
+      const [DErr] = await Manager.Run(`DROP TABLE \`${Table}\``);
+      if (DErr) Logger.databaseError(`Failed to drop legacy table ${Table}:`, DErr);
+    }
     for (let Table of Tables) {
       Logger.database(`Creating table: ${Table.Name}`);
       let [Err, _Result] = await Manager.Run(Table.SQL);

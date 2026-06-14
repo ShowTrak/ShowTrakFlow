@@ -31,6 +31,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     btnCompact.dataset.bound = '1';
   }
+
+  if (!document.body.dataset.modeShortcutsBound) {
+    document.addEventListener('keydown', async (e) => {
+      const target = e.target;
+      const tag = target && target.tagName ? String(target.tagName).toLowerCase() : '';
+      const isTypingTarget =
+        (target && target.isContentEditable) ||
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select';
+      if (isTypingTarget) return;
+
+      if (!e.metaKey && !e.ctrlKey) return;
+      if (e.altKey) return;
+
+      const key = String(e.key || '');
+      if (key === '1') {
+        e.preventDefault();
+        await window.API.SetMode('SHOW');
+      } else if (key === '2') {
+        e.preventDefault();
+        await window.API.SetMode('EDIT');
+      }
+    });
+    document.body.dataset.modeShortcutsBound = '1';
+  }
+
   // Initialize with backend mode
   try {
     const mode = await window.API.GetMode();
