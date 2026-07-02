@@ -115,8 +115,15 @@
     if (!container) return;
     const opts = options || {};
     let dragEl = null;
+    let dragStartOrigin = null;
 
     $container.off('.dragreorder');
+
+    // Track where the drag gesture began so handle checks can use the
+    // original click target instead of dragstart's retargeted element.
+    $container.on('mousedown.dragreorder', itemSelector, function (e) {
+      dragStartOrigin = e.target;
+    });
 
     // Find the element the dragged row should be inserted BEFORE, based on the
     // cursor Y. Returns null when the cursor is past the last item (append).
@@ -132,10 +139,12 @@
     }
 
     $container.on('dragstart.dragreorder', itemSelector, function (e) {
-      if (opts.ignoreFromSelector && $(e.target).closest(opts.ignoreFromSelector).length) {
+      const origin = dragStartOrigin || e.target;
+      if (opts.ignoreFromSelector && $(origin).closest(opts.ignoreFromSelector).length) {
+        e.preventDefault();
         return;
       }
-      if (opts.handleSelector && !$(e.target).closest(opts.handleSelector).length) {
+      if (opts.handleSelector && !$(origin).closest(opts.handleSelector).length) {
         e.preventDefault();
         return;
       }
@@ -152,6 +161,7 @@
     $container.on('dragend.dragreorder', itemSelector, function () {
       this.classList.remove('dragging');
       dragEl = null;
+      dragStartOrigin = null;
     });
 
     // Container-level dragover so movement is tracked even when the cursor is
@@ -176,6 +186,7 @@
       const ids = Array.from(container.querySelectorAll(itemSelector)).map((el) =>
         $(el).data('id')
       );
+      dragStartOrigin = null;
       if (typeof onReorder === 'function') onReorder(ids);
     });
   }
@@ -311,6 +322,7 @@
               : ''
           }
           <button type="button" class="sf-icon-btn sf-show-only sf-show-in-edit sf-scene-start" data-id="${scene.SceneID}" title="Start scene"><i class="bi bi-play-fill"></i></button>
+          <button type="button" class="sf-icon-btn sf-edit-only sf-scene-duplicate" data-id="${scene.SceneID}" title="Duplicate scene"><i class="bi bi-copy"></i></button>
           <button type="button" class="sf-icon-btn sf-edit-only sf-scene-edit" data-id="${scene.SceneID}" title="Edit scene"><i class="bi bi-pencil"></i></button>
           <button type="button" class="sf-icon-btn text-danger sf-edit-only sf-scene-delete" data-id="${scene.SceneID}" title="Delete scene"><i class="bi bi-trash"></i></button>
         </div>
@@ -1514,6 +1526,29 @@
     CloseOverlay();
   }
 
+  function BuildDuplicatedScenePayload(scene) {
+    const milestones = Array.isArray(scene && scene.Milestones)
+      ? scene.Milestones.map((m) => ({
+          Label: m && m.Label != null ? String(m.Label) : '',
+          Offset: Number(m && m.Offset),
+          Colour: m && m.Colour ? String(m.Colour) : DefaultShowColour(),
+        }))
+      : [];
+
+    return {
+      Label: scene && scene.Label ? String(scene.Label) : 'Scene',
+      Duration: scene && scene.Duration != null ? Number(scene.Duration) : null,
+      Icon: scene && scene.Icon ? String(scene.Icon) : 'chat-left-text-fill',
+      Colour: scene && scene.Colour ? String(scene.Colour) : DefaultShowColour(),
+      HasChatRoom: !!(scene && scene.HasChatRoom),
+      MaxGroups:
+        scene && scene.MaxGroups != null && Number.isInteger(Number(scene.MaxGroups))
+          ? Number(scene.MaxGroups)
+          : null,
+      Milestones: milestones.filter((m) => Number.isFinite(m.Offset) && m.Offset >= 0),
+    };
+  }
+
   // ---- Flag definition editor ----
   function OpenFlagEditor(flag) {
     const isEdit = !!flag;
@@ -1719,6 +1754,16 @@
     $(document).on('click', '.sf-scene-edit', function () {
       const id = Number($(this).attr('data-id'));
       OpenSceneEditor(ScenesCache.find((s) => s.SceneID === id) || null);
+    });
+    $(document).on('click', '.sf-scene-duplicate', async function () {
+      const id = Number($(this).attr('data-id'));
+      const source = ScenesCache.find((s) => Number(s.SceneID) === id);
+      if (!source) {
+        ToastError('Scene not found');
+        return;
+      }
+      const [Err] = (await window.API.CreateScene(BuildDuplicatedScenePayload(source))) || [];
+      if (Err) ToastError(Err);
     });
     $(document).on('click', '.sf-scene-delete', async function () {
       const id = Number($(this).attr('data-id'));

@@ -3922,11 +3922,11 @@ body.mode-edit .CLIENT_TILE_COG:focus-visible {
   flex: 0 0 64px;
 }
 
-/* Edit mode can show chat + start + edit + delete, so reserve enough width
+/* Edit mode can show chat + start + duplicate + edit + delete, so reserve enough width
    and trim neighboring columns to avoid button compression. */
 body.mode-edit .sf-scene-actions {
-  width: 132px;
-  flex: 0 0 132px;
+  width: 166px;
+  flex: 0 0 166px;
 }
 
 body.mode-edit .sf-scene-left {
@@ -3973,6 +3973,16 @@ body.mode-edit .sf-scene-group {
 .sf-scene-chat:hover {
   background: rgba(75, 153, 255, 0.36);
   color: #8ebcff;
+}
+
+.sf-scene-duplicate {
+  background: rgba(89, 144, 255, 0.24);
+  color: #81b3ff;
+}
+
+.sf-scene-duplicate:hover {
+  background: rgba(89, 144, 255, 0.38);
+  color: #a3c8ff;
 }
 
 .sf-scene-edit {
